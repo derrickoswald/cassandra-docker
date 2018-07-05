@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Note on the maximum number of open files on Linux
+#
+# Amazon's AMI (e.g. ami-c91624b0 - amzn-ami-2018.03.a-amazon-ecs-optimized (2018-05-17T14:49:42.000Z) Amazon Linux AMI 2018.03.a x86_64 ECS HVM GP2)
+# has a very small limit on the maximum number of open files (4096),
+# which was hit because the program was leaking sockets, but fixed so I didn't need to change the file limit,
+# but theoretically, if you need to increase the host's allowed limit (the docker container itself has a limit of 1M = 1024 × 1024)
+# you should:
+# 1) add the following line to /etc/systemd/user.conf and /etc/systemd/system.conf (which don't exist in the AMI image):
+#   DefaultLimitNOFILE=65535
+# 2) add the following four lines to /etc/security/limits.conf (which does exist):
+#   root hard nofile 65535
+#   root soft nofile 65535
+#   ec2-user hard nofile 65535
+#   ec2-user soft nofile 65535
+# and then re-login and test with:
+#   ulimit -Hn
+#   65535
+
+set -x
+docker run --name cassandra --rm --publish 7000:7000 --publish 7001:7001 --publish 7199:7199 --publish 9042:9042 --publish 9160:9160 derrickoswald/cassandra-docker &

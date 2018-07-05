@@ -1,8 +1,20 @@
 # vim:set ft=dockerfile:
 FROM debian:stretch-slim
+LABEL maintainer = "Derrick.Oswald@9code.ch"
+
+# set up TTY
+ENV TERM=xterm-256color
 
 # explicitly set user/group IDs
 RUN groupadd -r cassandra --gid=999 && useradd -r -g cassandra --uid=999 cassandra
+
+# install usefull utilities
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install \
+    -yq --no-install-recommends  \
+      vim p7zip net-tools ftp \
+  && apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 RUN set -ex; \
 	apt-get update; \
@@ -121,6 +133,15 @@ RUN set -ex; \
 
 ENV CASSANDRA_CONFIG /etc/cassandra
 
+RUN  sed --in-place 's/enable_user_defined_functions: false/enable_user_defined_functions: true/g' $CASSANDRA_CONFIG/cassandra.yaml \
+  && sed --in-place 's/enable_scripted_user_defined_functions: false/enable_scripted_user_defined_functions: true/g' $CASSANDRA_CONFIG/cassandra.yaml \
+  && sed --in-place 's/read_request_timeout_in_ms: 5000/read_request_timeout_in_ms: 100000/g' $CASSANDRA_CONFIG/cassandra.yaml \
+  && sed --in-place 's/range_request_timeout_in_ms: 10000/range_request_timeout_in_ms: 100000/g' $CASSANDRA_CONFIG/cassandra.yaml \
+  && sed --in-place 's/write_request_timeout_in_ms: 2000/write_request_timeout_in_ms: 100000/g' $CASSANDRA_CONFIG/cassandra.yaml \
+  && sed --in-place 's/INFO/WARN/g' $CASSANDRA_CONFIG/logback.xml \
+  && sed --in-place 's/level="DEBUG"/level="WARN"/g' $CASSANDRA_CONFIG/logback.xml \
+  && sed --in-place 's/level="ERROR"/level="WARN"/g' $CASSANDRA_CONFIG/logback.xml
+
 RUN set -ex; \
 	\
 	dpkgArch="$(dpkg --print-architecture)"; \
@@ -152,6 +173,12 @@ RUN mkdir -p /var/lib/cassandra "$CASSANDRA_CONFIG" \
 	&& chown -R cassandra:cassandra /var/lib/cassandra "$CASSANDRA_CONFIG" \
 	&& chmod 777 /var/lib/cassandra "$CASSANDRA_CONFIG"
 VOLUME /var/lib/cassandra
+
+# fix environment for other users
+RUN echo "alias ll='ls -alF --color=auto'">> /etc/bash.bashrc
+
+# fix vim's stupid and really annoying "visual mode"
+RUN echo "set mouse-=a" > /root/.vimrc
 
 # 7000: intra-node communication
 # 7001: TLS intra-node communication
