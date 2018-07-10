@@ -140,7 +140,8 @@ RUN  sed --in-place 's/enable_user_defined_functions: false/enable_user_defined_
   && sed --in-place 's/write_request_timeout_in_ms: 2000/write_request_timeout_in_ms: 100000/g' $CASSANDRA_CONFIG/cassandra.yaml \
   && sed --in-place 's/INFO/WARN/g' $CASSANDRA_CONFIG/logback.xml \
   && sed --in-place 's/level="DEBUG"/level="WARN"/g' $CASSANDRA_CONFIG/logback.xml \
-  && sed --in-place 's/level="ERROR"/level="WARN"/g' $CASSANDRA_CONFIG/logback.xml
+  && sed --in-place 's/level="ERROR"/level="WARN"/g' $CASSANDRA_CONFIG/logback.xml \
+  && echo '-Dcassandra.consistent.rangemovement=false' >> $CASSANDRA_CONFIG/jvm.options
 
 RUN set -ex; \
 	\
