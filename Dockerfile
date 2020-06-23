@@ -56,6 +56,7 @@ ENV GPG_KEYS \
 	A26E528B271F19B9E5D8E19EA278B781FE4B2BDA
 RUN set -ex; \
 	export GNUPGHOME="$(mktemp -d)"; \
+	echo "disable-ipv6" >> ${GNUPGHOME}/dirmngr.conf; \
 	for key in $GPG_KEYS; do \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done; \
