@@ -63,8 +63,9 @@ RUN set -ex; \
 	rm -rf "$GNUPGHOME"; \
 	apt-key list
 
-ENV CASSANDRA_VERSION 3.11.2
+RUN set -x && apt-get update && apt-get install -y --no-install-recommends apt-transport-https
 
+ENV CASSANDRA_VERSION 3.11.6
 RUN set -ex; \
 	\
 # https://bugs.debian.org/877677
@@ -75,7 +76,7 @@ RUN set -ex; \
 	case "$dpkgArch" in \
 		amd64|i386) \
 # arches officialy included in upstream's repo metadata
-			echo 'deb http://www.apache.org/dist/cassandra/debian 311x main' > /etc/apt/sources.list.d/cassandra.list; \
+			echo 'deb http://dl.bintray.com/apache/cassandra 311x main' > /etc/apt/sources.list.d/cassandra.list; \
 			apt-get update; \
 			;; \
 		*) \
@@ -102,7 +103,7 @@ RUN set -ex; \
 			tempDir="$(mktemp -d)"; \
 			for pkg in cassandra cassandra-tools; do \
 				deb="${pkg}_${CASSANDRA_VERSION}_all.deb"; \
-				wget -O "$tempDir/$deb" "https://www.apache.org/dist/cassandra/debian/pool/main/c/cassandra/$deb"; \
+				wget -O "$tempDir/$deb" "http://dl.bintray.com/apache/cassandra/pool/main/c/cassandra/$deb"; \
 			done; \
 			\
 # create a temporary local APT repo to install from (so that dependency resolution can be handled by APT, as it should be)
@@ -118,7 +119,7 @@ RUN set -ex; \
 			;; \
 	esac; \
 	\
-	apt-get install -y \
+	apt-get install -y --allow-unauthenticated \
 		cassandra="$CASSANDRA_VERSION" \
 		cassandra-tools="$CASSANDRA_VERSION" \
 	; \
